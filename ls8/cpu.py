@@ -49,7 +49,7 @@ class CPU:
         # 256 bytes of memory for cpu
         self.ram = [0] * 256
         # 8 general purpose registers
-        self.register = [0] * 8
+        self.reg = [0] * 8
         # System program counter
         self.pc = 0
         # Stack Pointer
@@ -71,22 +71,40 @@ class CPU:
         """Load a program into memory."""
 
         address = 0
+        if len(sys.argv > 1):
+            file = sys.argv[1]
+            try:
+                with open(file) as f:
+                    for line in f:
+                        num = line.split('#')[0].strip()
 
-        # For now, we've just hardcoded a program:
+                        if num == "":
+                            continue
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
+                        val = int(num, 2)
+                        self.ram[address] = val
+                        address += 1
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+            except FileNotFoundError:
+                print("File not found!")
+                sys.exit(2)
+            f.close()
+        else:
+
+            # For now, we've just hardcoded a program:
+            program = [
+                # From print8.ls8
+                0b10000010,  # LDI R0,8
+                0b00000000,
+                0b00001000,
+                0b01000111,  # PRN R0
+                0b00000000,
+                0b00000001,  # HLT
+            ]
+
+            for instruction in program:
+                self.ram[address] = instruction
+                address += 1
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -124,7 +142,7 @@ class CPU:
     def run(self):
         """Run the CPU."""
         while self.running:
-            instruction_register = self.ram(self.pc)
+            instruction_register = self.read_ram(self.pc)
             operand_a, operand_b = self.read_ram(
                 self.pc + 1), self.read_ram(self.pc + 2)
             if instruction_register == HLT:
@@ -135,6 +153,9 @@ class CPU:
             elif instruction_register == PRN:
                 print(self.reg[operand_a])
                 self.pc += 2
+            elif instruction_register == MUL:
+                self.alu("MUL", operand_a, operand_b)
+                self.pc += 3
             else:
                 print(f"Instruction is not valid: {instruction_register}")
                 sys.exit()
