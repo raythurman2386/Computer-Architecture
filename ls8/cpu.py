@@ -46,39 +46,39 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        # 256 bytes of memory for cpu
+        # hold 256 bytes of memory
         self.ram = [0] * 256
-        # 8 general purpose registers
+        # hold 8 general-purpose registers
         self.reg = [0] * 8
-        # System program counter
+        # program counter
         self.pc = 0
-        # Stack Pointer
+        # stack pointer
         self.sp = 7
-        # CPU running state
+        # CPU running
         self.running = True
 
-    def read_ram(self, address):
+    def ram_read(self, address):
         if address < len(self.ram):
             return self.ram[address]
         else:
-            print("Address is wrong" + str(address))
+            print("address is too high:" + str(address))
             sys.exit(1)
 
-    def write_ram(self, value, address):
+    def ram_write(self, value, address):
         self.ram[address] = value
 
     def load(self):
         """Load a program into memory."""
 
         address = 0
-        if len(sys.argv > 1):
-            file = sys.argv[1]
+        if len(sys.argv) > 1:
+            filename = sys.argv[1]
             try:
-                with open(file) as f:
+                with open(filename) as f:
                     for line in f:
-                        num = line.split('#')[0].strip()
+                        num = line.split("#")[0].strip()
 
-                        if num == "":
+                        if num == '':
                             continue
 
                         val = int(num, 2)
@@ -86,12 +86,13 @@ class CPU:
                         address += 1
 
             except FileNotFoundError:
-                print("File not found!")
+                print("File not find!")
                 sys.exit(2)
             f.close()
         else:
 
             # For now, we've just hardcoded a program:
+
             program = [
                 # From print8.ls8
                 0b10000010,  # LDI R0,8
@@ -111,11 +112,13 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+        # elif op == "SUB": etc
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
         elif op == 'SUB':
             self.reg[reg_a] -= self.reg[reg_b]
-        # elif op == "SUB": etc
+        elif op == 'DIV':
+            self.reg[reg_a] /= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -142,9 +145,10 @@ class CPU:
     def run(self):
         """Run the CPU."""
         while self.running:
-            instruction_register = self.read_ram(self.pc)
-            operand_a, operand_b = self.read_ram(
-                self.pc + 1), self.read_ram(self.pc + 2)
+            instruction_register = self.ram_read(self.pc)
+            operand_a, operand_b = self.ram_read(
+                self.pc + 1), self.ram_read(self.pc + 2)
+            # self.trace()
             if instruction_register == HLT:
                 self.running = False
             elif instruction_register == LDI:
@@ -162,6 +166,18 @@ class CPU:
             elif instruction_register == SUB:
                 self.alu("SUB", operand_a, operand_b)
                 self.pc += 3
+            elif instruction_register == DIV:
+                self.alu("DIV", operand_a, operand_b)
+                self.pc += 3
+            elif instruction_register == PUSH:
+                self.reg[self.sp] -= 1
+                self.ram_write(self.reg[operand_a], self.reg[self.sp])
+                self.pc += 2
+            elif instruction_register == POP:
+                # take the value that is stored at the top of the stack
+                self.reg[operand_a] = self.ram_read(self.reg[self.sp])
+                self.reg[self.sp] += 1
+                self.pc += 2
             else:
-                print(f"Instruction is not valid: {instruction_register}")
+                print(f"Instruction not valid: {instruction_register}")
                 sys.exit()
