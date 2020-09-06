@@ -156,6 +156,12 @@ class CPU:
             elif instruction_register == MUL:
                 self.alu("MUL", operand_a, operand_b)
                 self.pc += 3
+            elif instruction_register == ADD:
+                self.alu("ADD", operand_a, operand_b)
+                self.pc += 3
+            elif instruction_register == SUB:
+                self.alu("SUB", operand_a, operand_b)
+                self.pc += 3
             else:
                 print(f"Instruction is not valid: {instruction_register}")
                 sys.exit()
