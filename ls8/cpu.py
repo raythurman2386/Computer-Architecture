@@ -123,4 +123,18 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        while self.running:
+            instruction_register = self.ram(self.pc)
+            operand_a, operand_b = self.read_ram(
+                self.pc + 1), self.read_ram(self.pc + 2)
+            if instruction_register == HLT:
+                self.running = False
+            elif instruction_register == LDI:
+                self.reg[operand_a] = operand_b
+                self.pc += 3
+            elif instruction_register == PRN:
+                print(self.reg[operand_a])
+                self.pc += 2
+            else:
+                print(f"Instruction is not valid: {instruction_register}")
+                sys.exit()
