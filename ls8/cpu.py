@@ -57,6 +57,16 @@ class CPU:
         # CPU running state
         self.running = True
 
+    def read_ram(self, address):
+        if address < len(self.ram):
+            return self.ram[address]
+        else:
+            print("Address is wrong" + str(address))
+            sys.exit(1)
+
+    def write_ram(self, value, address):
+        self.ram[address] = value
+
     def load(self):
         """Load a program into memory."""
 
